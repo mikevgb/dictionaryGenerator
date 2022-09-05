@@ -23,11 +23,37 @@ std::string exec(const char* cmd)
     return result;
 }
 
+std::string hashCalc(std::string semi_final, std::string hash4crack, int z, int sizeFirst, int a, int sizeSecond)
+{
+	std::string cmd("md5 <<< ");
+	//std::string cmd("shasum <<< ");
+	cmd += semi_final;
+	std::string res = exec(cmd.c_str());
+	res.erase(std::remove(res.begin(), res.end(), '\n'), res.end());
+	res.erase(std::remove(res.begin(), res.end(), '-'), res.end());
+	res.erase(std::remove(res.begin(), res.end(), ' '), res.end());
+			
+	if (res == hash4crack)
+	{
+		std::cout << "found! = " << semi_final << std::endl;
+		exit(0);
+	}
+	else
+	{
+		std::cout << "1wordLoop = " << z << "/" << sizeFirst - 1 << 
+		" 2wordLoop = " << a << "/" << sizeSecond - 1 << " "  
+		<< std::endl; 
+		std::cout << semi_final << " " << res << std::endl;
+	}
+	return res;
+}
+
 int main()
 {
-	std::string semi_final[2193];
+	std::string semi_final;
 	std::ofstream out("passdic.txt");
 	std::string hash4crack = "55d91e34650fd1a804cd94f5f39b34fb";
+	//std::string hash4crack = "cbd4985cff1c0846df04f5a5162bb6f5"; //test
 	std::string firstWord[] = {"Monaco", "MonacoTelecom", "Monacotelecom","Iliad", "Minitel","Free", "Online", "Freemobile", "FreeMobile", "42", "KimaVentures", "Kimaventures", "StationF", "Stationf"};
 	std::string secondWord[] = {"Josset", "Julia", "John", "Jules", "Delphine", "Bernard", "Elisa", "Michel", "Camille"};
 
@@ -41,13 +67,12 @@ int main()
 		{
 			int x = 0;
 			int y = 0;
-			int res_count = sizeSemiF;
-			for (long int i = 0; i < sizeSemiF; i++)
+			for (long int i = 0; i < 2194; i++)
 			{
-				semi_final[i] += std::to_string(y);
-				semi_final[i] += firstWord[z];
-				semi_final[i] += std::to_string(x);
-				semi_final[i] += secondWord[a];
+				semi_final = std::to_string(y);
+				semi_final += firstWord[z];
+				semi_final += std::to_string(x);
+				semi_final += secondWord[a];
 				if (y == 42)
 				{
 					y = 0;
@@ -59,30 +84,14 @@ int main()
 					x = 0;
 				
 				//hashcat not working in campus macs :(
-				std::string cmd("md5 <<< ");
-				cmd += semi_final[i];
-				std::string res = exec(cmd.c_str());
-				res.erase(std::remove(res.begin(), res.end(), '\n'), res.end());
-				
-				if (res == hash4crack)
-				{
-					std::cout << "found! = " << semi_final[i] << std::endl;
-					exit(0);
-				}
-				else
-				{
-					std::cout << "1wordLoop = " << z << "/" << sizeFirst - 1 << 
-						" 2wordLoop = " << a << "/" << sizeSecond - 1 << " "  
-						<<  res_count-- << std::endl;
-					std::cout << semi_final[i] << " " << res << std::endl;
-				}
-					
-				out << semi_final[i] << " " << res << "\n";
-				semi_final[i] = ""; //reset string
+				std::string res = hashCalc(semi_final, hash4crack, z, sizeFirst, a, sizeSecond);
+		
+				out << semi_final << " ";
+				out	<< res << "\n"; //comment this to remove hashes
 			}
 		}
 	}
-	std::string cmd2("wc -l passdict.txt");
+	std::string cmd2("wc -l passdic.txt");
 	std::string res2 = exec(cmd2.c_str());
 	std::cout << "Permutations generated = " << std::endl;
 	return 0;
